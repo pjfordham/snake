@@ -1,15 +1,16 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <random>
+#include "support.hh"
 
 const int BOARD_SIZE = 40;
 const float TILE_SIZE = 20.0f;
 
 class Game {
-  int board[BOARD_SIZE][BOARD_SIZE];
-  int length, head_x, head_y;
-  bool dead;
-  
+   Array2D<int> board;
+   int length, head_x, head_y;
+   bool dead;
+
 public:
 
   enum direction_t {
@@ -70,7 +71,7 @@ public:
     spawn_food();
   }
 
-  Game() {
+   Game(): board (BOARD_SIZE, BOARD_SIZE) {
     reset();
   }
   
