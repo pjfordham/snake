@@ -11,10 +11,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
+set(SFML_STATIC_LIBRARIES ON)
+find_package(SFML 2.5.1 REQUIRED system window graphics)
+
 # add the executable
 add_executable(Snake snake.cc support.cc)
-
-list(APPEND EXTRA_LIBS sfml-graphics)
-list(APPEND EXTRA_LIBS sfml-window)
-list(APPEND EXTRA_LIBS sfml-system)
-target_link_libraries(Snake PUBLIC ${EXTRA_LIBS})
+target_link_libraries(Snake sfml-system sfml-window sfml-graphics)
