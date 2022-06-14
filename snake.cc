@@ -2,124 +2,119 @@
 #include <SFML/Graphics.hpp>
 #include <random>
 #include "support.hh"
+#include <deque>
 
 const int BOARD_SIZE = 40;
 const float TILE_SIZE = 20.0f;
 
+struct Pos {
+   int x,y;
+
+   bool operator==(const Pos&that) const {
+      return x == that.x && y == that.y;
+   }
+};
+
 class Game {
-   Array2D<int> board;
-   int length, head_x, head_y;
+   std::deque<Pos> body;
    bool dead;
+   Pos food;
 
 public:
 
    enum direction_t {
-      Up, Down, Left, Right };
+      Up, Down, Left, Right
+   };
+
    enum content_t {
-      Snake, Food, Empty, Head };
+      Snake, Food, Empty, Head
+   };
 
 private:
    direction_t new_direction;
    direction_t direction;
 
    void spawn_food() {
-      std::uniform_int_distribution<int> randomLocationRange(0, BOARD_SIZE-1);
-      std::random_device rd;
-      std::mt19937 randomNumbers(rd());
-      int i = randomLocationRange( randomNumbers );
-      int j = randomLocationRange( randomNumbers );
-      if ( board[i][j] == 0 )
-         board[i][j] = -1;
-      else
-         spawn_food();
+      static std::uniform_int_distribution<int> randomLocationRange(0, BOARD_SIZE-1);
+      static std::random_device rd;
+      static std::mt19937 randomNumbers(rd());
+      do {
+         food.x = randomLocationRange( randomNumbers );
+         food.y = randomLocationRange( randomNumbers );
+      } while ( (std::find(body.begin(), body.end(), Pos{food.x,food.y}) != body.end() ));
    }
 
 public:
 
    void setDirection( direction_t dir ) {
-      if ( dir == Left){
-         if (direction != Right)
-            new_direction = Left;
+      if ( dir == Left && direction != Right) {
+         new_direction = Left;
       }
-      if ( dir == Right){
-         if (direction != Left)
-            new_direction = Right;
+      else if ( dir == Right && direction != Left) {
+         new_direction = Right;
       }
-      if ( dir == Up){
-         if (direction != Down)
-            new_direction = Up;
+      else if ( dir == Up && direction != Down) {
+         new_direction = Up;
       }
-      if ( dir == Down){
-         if (direction != Up)
-            new_direction = Down;
+      else if ( dir == Down && direction != Up){
+         new_direction = Down;
       }
    }
 
    void reset() {
       dead=false;
-      length=2;
-      for( int i=0;i<BOARD_SIZE;i++ ){
-         for ( int j = 0;j<BOARD_SIZE;j++) {
-            board[i][j] = 0;
-         }
-      }
-      head_x = BOARD_SIZE / 2;
-      head_y = BOARD_SIZE / 2;
-      board[head_x][head_y]=length;
+      body.clear();
+      body.push_front(Pos{ BOARD_SIZE / 2,  BOARD_SIZE / 2});
       direction=Left;
       new_direction=Left;
       spawn_food();
    }
 
-   Game(): board(BOARD_SIZE, BOARD_SIZE) {
+   Game() {
       reset();
    }
 
    content_t getContent(int x, int y) {
-      if (dead) {
-         if (x == head_x && y == head_y) return Head;
-         if (board[x][y] > 0) return Food;
-         if (board[x][y] == -1 ) return Empty;
+      if (x == body.front().x && y == body.front().y) {
+         return Head;
+      } else if (x == food.x && y == food.y) {
+         return Food;
+      } else if (std::find(body.begin(), body.end(), Pos{x,y}) != body.end() ) {
          return Snake;
       } else {
-         if (x == head_x && y == head_y) return Head;
-         if (board[x][y] > 0) return Snake;
-         if (board[x][y] == -1 ) return Food;
          return Empty;
       }
    }
 
    void iterate() {
-      if (dead) return;
-      direction=new_direction;
+      if (dead)
+         return;
+
+      direction = new_direction;
+      int head_x = body.front().x;
+      int head_y = body.front().y;
+
       switch (direction) {
-      case Left: head_x--;break;
-      case Right: head_x++;break;
-      case Up: head_y--;break;
-      case Down: head_y++;break;
+      case Left:
+         head_x--; break;
+      case Right:
+         head_x++;break;
+      case Up:
+         head_y--;break;
+      case Down:
+         head_y++;break;
       }
+
       if (head_x < 0 || head_y < 0 || head_x == BOARD_SIZE || head_y == BOARD_SIZE) {
          dead = true;
-         head_x = 0;
-         head_y = 0;
-      }else if ( board[head_x][head_y] >0 ) {
+      } else if ( std::find(body.begin(), body.end(), Pos{head_x,head_y}) != body.end() ) {
          dead = true;
-         head_x = 0;
-         head_y = 0;
-      } else{
-         if ( board[head_x][head_y] == -1 ) {
-            length++;
+      } else {
+         body.push_front(Pos{head_x,head_y});
+         if ( head_x == food.x && head_y == food.y) {
             spawn_food();
-         }
-         board[head_x][head_y] = 1;
-      }
-      for( int i=0;i<BOARD_SIZE;i++ ) {
-         for ( int j = 0;j<BOARD_SIZE;j++ ) {
-            if (board[i][j] > length) {
-               board[i][j]=0;
-            } else if (board[i][j] > 0) {
-               board[i][j]++;
-            }
+         } else {
+            body.pop_back();
          }
       }
    }
