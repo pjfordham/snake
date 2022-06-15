@@ -18,7 +18,7 @@ struct Pos {
 class Game {
    std::deque<Pos> body;
    bool dead;
-   Pos food;
+   Pos food; // Maybe body[0] should be the food not the head?
 
 public:
 
@@ -74,19 +74,7 @@ public:
       reset();
    }
 
-   content_t getContent(int x, int y) {
-      if (x == body.front().x && y == body.front().y) {
-         return Head;
-      } else if (x == food.x && y == food.y) {
-         return Food;
-      } else if (std::find(body.begin(), body.end(), Pos{x,y}) != body.end() ) {
-         return Snake;
-      } else {
-         return Empty;
-      }
-   }
-
-   void iterate() {
+   void pulse() {
       if (dead)
          return;
 
@@ -119,6 +107,55 @@ public:
       }
    }
 
+   //
+   // Iteration logic
+   //
+
+   struct contents_t {
+      int x, y;
+      content_t content;
+   };
+
+   class iterator {
+      Game *parent;
+      int index; // Maybe we could the the deque iterator internally.
+
+   public:
+
+      iterator( Game* _parent) : parent{ _parent }, index( 0 ) {}
+
+      bool operator!=(const iterator &that) const {
+         return this->parent != that.parent || index != that.index;
+      }
+
+      iterator& operator++() {
+         ++index;
+         return *this;
+      }
+
+      contents_t operator*() const {
+         if (index == 0) {
+            return contents_t{parent->food.x, parent->food.y, Food};
+         } else if (index == 1) {
+            return contents_t{parent->body[0].x, parent->body[0].y, Head};
+         } else {
+            return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Snake};
+         }
+      }
+
+      friend Game;
+   };
+
+   iterator begin() {
+      return iterator(this);
+   }
+
+   iterator end() {
+      auto i = iterator(this);
+      i.index = body.size() + 1;
+      return i;
+   }
+
 };
 
 
@@ -133,7 +170,7 @@ int main()
    while (window.isOpen()) {
       sf::Time elapsed = clock.getElapsedTime();
       if (elapsed.asSeconds() > 0.2f) {
-         game.iterate();
+         game.pulse();
          clock.restart();
       }
 
@@ -166,28 +203,31 @@ int main()
       }
 
       window.clear( sf::Color::Blue );
-      for( int x=0;x<BOARD_SIZE;x++ ){
-         for ( int y = 0;y<BOARD_SIZE;y++) {
-            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-            shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
-            switch (game.getContent(x, y)) {
-            case Game::Empty:
-               shape.setFillColor(sf::Color::Black);
-               break;
-            case Game::Food:
-               shape.setFillColor(sf::Color::Red);
-               break;
-            case Game::Snake:
-               shape.setFillColor(sf::Color::White);
-               break;
-            case Game::Head:
-               shape.setFillColor(sf::Color::Green);
-               break;
-            }
-            window.draw(shape);
-         }
-      }
 
+      sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
+      shape.setFillColor(sf::Color::Black);
+      shape.setOrigin(1*-TILE_SIZE, 1*-TILE_SIZE);
+      window.draw(shape);
+
+      for (auto&& [ x, y, content ] : game) {
+         sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+         shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
+         switch (content) {
+         default:
+            shape.setFillColor(sf::Color::Black);
+            break;
+         case Game::Food:
+            shape.setFillColor(sf::Color::Red);
+            break;
+         case Game::Snake:
+            shape.setFillColor(sf::Color::White);
+            break;
+         case Game::Head:
+            shape.setFillColor(sf::Color::Green);
+            break;
+         }
+         window.draw(shape);
+      }
       window.display();
    }
 
