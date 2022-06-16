@@ -173,7 +173,7 @@ int main()
 
       bool skip_pulse = true;
 
-      if (clock.getElapsedTime().asMilliseconds() > 200) {
+      if (clock.getElapsedTime().asMilliseconds() > 100) {
          skip_pulse = false;
       }
 
