@@ -27,7 +27,7 @@ public:
    };
 
    enum content_t {
-      Body, Food, Empty, Head
+      Corpse, Body, Food, Empty, Head
    };
 
 private:
@@ -105,7 +105,7 @@ public:
             body.pop_back();
          }
       }
-      return !dead;
+      return true;
    }
 
    //
@@ -137,10 +137,13 @@ public:
       contents_t operator*() const {
          if (index == 0) {
             return contents_t{parent->food.x, parent->food.y, Food};
-         } else if (index == 1) {
-            return contents_t{parent->body[0].x, parent->body[0].y, Head};
+         } else if (index == 1 && !parent->dead) {
+             return contents_t{parent->body[0].x, parent->body[0].y, Head};
          } else {
-            return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Body};
+            if (parent->dead)
+               return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Corpse};
+            else
+               return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Body};
          }
       }
 
@@ -239,6 +242,9 @@ int main()
                break;
             case Snake::Body:
                shape.setFillColor(sf::Color::White);
+               break;
+            case Snake::Corpse:
+               shape.setFillColor(sf::Color::Yellow);
                break;
             case Snake::Head:
                shape.setFillColor(sf::Color::Green);
