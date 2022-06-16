@@ -96,6 +96,14 @@
                   element.width,
               );
 
+              var timeout;
+              function pulse_js() {
+                  clearTimeout(timeout);
+                  Module._pulse();
+                  ctx.putImageData(image, 0, 0);
+                  timeout = setTimeout( pulse_js, 100 );
+              }
+
               element.onmousedown = (event) => {
                   var x = event.clientX - canvas.offsetLeft
                   var y = event.clientY - canvas.offsetTop
@@ -107,8 +115,8 @@
                        ctx.putImageData(image, 0, 0);
                   }
               };
+
               window.onkeydown = (event) => {
-                  // ArrowUp w, ArrowDown s, ArrowLeft a, ArrowRight d
                   key = event.key;
                   if (key == "ArrowUp" ){
                       key = "w";
@@ -120,15 +128,11 @@
                       key = "d";
                   }
                   Module.ccall('keypress','',['number'],[key.charCodeAt(0)]);
-                  Module._pulse();
-                  ctx.putImageData(image, 0, 0);
+                  pulse_js();
               };
 
-              const interval = setInterval(function() {
-                  Module._pulse();//ccall('pulse','',[],[]);
-                  ctx.putImageData(image, 0, 0);
-              }, 100);
               Module._init();
+              pulse_js();
           }],
         preRun: [],
         print: (function() {

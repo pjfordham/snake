@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const int TILE_SIZE = 10;
+const int TILE_SIZE = 20;
 
 const unsigned int SCREEN_WIDTH  = (2+BOARD_SIZE) * TILE_SIZE;
 const unsigned int SCREEN_HEIGHT = (2+BOARD_SIZE) * TILE_SIZE;
