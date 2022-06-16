@@ -1,7 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+//#include <SFML/System/Sleep.hpp>
 #include <random>
-#include "support.hh"
 #include <deque>
 
 const int BOARD_SIZE = 40;
@@ -15,7 +15,7 @@ struct Pos {
    }
 };
 
-class Game {
+class Snake {
    std::deque<Pos> body;
    bool dead;
    Pos food; // Maybe body[0] should be the food not the head?
@@ -27,7 +27,7 @@ public:
    };
 
    enum content_t {
-      Snake, Food, Empty, Head
+      Body, Food, Empty, Head
    };
 
 private:
@@ -70,7 +70,7 @@ public:
       spawn_food();
    }
 
-   Game() {
+   Snake() {
       reset();
    }
 
@@ -117,12 +117,12 @@ public:
    };
 
    class iterator {
-      Game *parent;
+      Snake *parent;
       int index; // Maybe we could the the deque iterator internally.
 
    public:
 
-      iterator( Game* _parent) : parent{ _parent }, index( 0 ) {}
+      iterator( Snake* _parent) : parent{ _parent }, index( 0 ) {}
 
       bool operator!=(const iterator &that) const {
          return this->parent != that.parent || index != that.index;
@@ -139,11 +139,11 @@ public:
          } else if (index == 1) {
             return contents_t{parent->body[0].x, parent->body[0].y, Head};
          } else {
-            return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Snake};
+            return contents_t{parent->body[index - 1].x, parent->body[index - 1].y, Body};
          }
       }
 
-      friend Game;
+      friend Snake;
    };
 
    iterator begin() {
@@ -162,43 +162,48 @@ public:
 int main()
 {
    sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Snake");
-
-   Game game;
+   window.setFramerateLimit(10);
+   Snake snake;
 
    sf::Clock clock;
 
    while (window.isOpen()) {
       sf::Time elapsed = clock.getElapsedTime();
-      if (elapsed.asSeconds() > 0.2f) {
-         game.pulse();
+      // We don't need this becuase window.display()
+      // does it when the frame rate limit is set
+      //      sf::sleep(sf::milliseconds(50));
+      if (elapsed.asMilliseconds() > 200) {
+         snake.pulse();
          clock.restart();
       }
 
-      sf::Event event;
-      while (window.pollEvent(event)) {
-         if (event.type == sf::Event::Closed)
+      for ( sf::Event event; window.pollEvent(event);) {
+         if (event.type == sf::Event::Closed) {
             window.close();
-         // Respond to key pressed events
-         if (event.type == sf::Event::KeyPressed){
-            if (event.key.code == sf::Keyboard::Escape){
+         } else if ( event.type == sf::Event::KeyPressed ) {
+            // Respond to key pressed events
+            switch (event.key.code) {
+            default:
+               break;
+            case sf::Keyboard::Escape:
                return 0;
+               break;
+            case sf::Keyboard::Space:
+               snake.reset();
+               break;
+            case sf::Keyboard::Left:
+               snake.setDirection( Snake::Left );
+               break;
+            case sf::Keyboard::Right:
+               snake.setDirection( Snake::Right );
+               break;
+            case sf::Keyboard::Up:
+               snake.setDirection( Snake::Up );
+               break;
+            case sf::Keyboard::Down:
+               snake.setDirection( Snake::Down );
+               break;
             }
-            if (event.key.code == sf::Keyboard::Space){
-               game.reset();
-            }
-            if (event.key.code == sf::Keyboard::Left){
-               game.setDirection( Game::Left );
-            }
-            if (event.key.code == sf::Keyboard::Right){
-               game.setDirection( Game::Right );
-            }
-            if (event.key.code == sf::Keyboard::Up){
-               game.setDirection( Game::Up );
-            }
-            if (event.key.code == sf::Keyboard::Down){
-               game.setDirection( Game::Down );
-            }
-
          }
       }
 
@@ -209,20 +214,20 @@ int main()
       shape.setOrigin(1*-TILE_SIZE, 1*-TILE_SIZE);
       window.draw(shape);
 
-      for (auto&& [ x, y, content ] : game) {
+      for (auto&& [ x, y, content ] : snake) {
          sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
          shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
          switch (content) {
          default:
             shape.setFillColor(sf::Color::Black);
             break;
-         case Game::Food:
+         case Snake::Food:
             shape.setFillColor(sf::Color::Red);
             break;
-         case Game::Snake:
+         case Snake::Body:
             shape.setFillColor(sf::Color::White);
             break;
-         case Game::Head:
+         case Snake::Head:
             shape.setFillColor(sf::Color::Green);
             break;
          }
