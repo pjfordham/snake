@@ -1,5 +1,6 @@
 #include <random>
 #include <deque>
+#include <algorithm>
 
 const int BOARD_SIZE = 40;
 
