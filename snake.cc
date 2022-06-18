@@ -5,12 +5,10 @@
 
 const float TILE_SIZE = 20.0;
 
-const unsigned int SCREEN_WIDTH  = (2 + BOARD_SIZE) * (int)TILE_SIZE;
-const unsigned int SCREEN_HEIGHT = (2 + BOARD_SIZE) * (int)TILE_SIZE;
-
 static void draw( sf::RenderWindow &window, Snake &snake ) {
    window.clear( sf::Color::Blue );
 
+   int BOARD_SIZE = snake.get_board_size();
    sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
    shape.setFillColor(sf::Color::Black);
    shape.setPosition(1*TILE_SIZE, 1*TILE_SIZE);
@@ -43,9 +41,13 @@ static void draw( sf::RenderWindow &window, Snake &snake ) {
 
 int main()
 {
+   const unsigned int BOARD_SIZE = 40;
+   const unsigned int SCREEN_WIDTH  = (2 + BOARD_SIZE) * (int)TILE_SIZE;
+   const unsigned int SCREEN_HEIGHT = (2 + BOARD_SIZE) * (int)TILE_SIZE;
+
    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Snake");
 
-   Snake snake;
+   Snake snake(BOARD_SIZE);
 
    sf::Clock clock;
 
