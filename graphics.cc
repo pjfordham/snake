@@ -62,16 +62,9 @@ extern "C" int getHeight() {
    return window->getHeight();
 }
 
-
-
-bool running = false;
-
-
 extern "C" void pulse() {
-   if (running) {
-      snake->pulse();
-      draw( window, snake);
-   }
+   snake->pulse();
+   draw( window, snake);
 }
 
 extern "C" void click(int x, int y) {
@@ -124,7 +117,6 @@ extern "C" void keypress(char key) {
       snake->setDirection( Snake::Right );
       break;
    default:
-      running = !running;
       break;
    }
 
