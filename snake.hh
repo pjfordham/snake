@@ -2,8 +2,6 @@
 #include <deque>
 #include <algorithm>
 
-const int BOARD_SIZE = 40;
-
 struct Pos {
    int x,y;
 
@@ -16,6 +14,7 @@ class Snake {
    std::deque<Pos> body;
    bool dead;
    Pos food; // Maybe body[0] should be the food not the head?
+   int BOARD_SIZE;
 
 public:
 
@@ -26,6 +25,10 @@ public:
    enum content_t {
       Corpse, Body, Food, Empty, Head
    };
+
+   int get_board_size() {
+      return BOARD_SIZE;
+   }
 
 private:
    direction_t new_direction;
@@ -67,7 +70,8 @@ public:
       spawn_food();
    }
 
-   Snake() {
+   Snake( int board_size ) {
+      BOARD_SIZE = board_size;
       reset();
    }
 

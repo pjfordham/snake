@@ -78,18 +78,19 @@
               const element = document.getElementById("canvas")
               const ctx = element.getContext("2d")
               const canvas = ctx.canvas;
-              element.width = Module.ccall('getWidth', // name of C function
-                                           'number', // return type
-                                           [], // argument types
-                                           [] );
-              element.height = Module.ccall('getHeight', // name of C function
-                                           'number', // return type
-                                           [], // argument types
-                                           [] );
+
+              const BOARD_SIZE = 40;
+              const TILE_SIZE = 20;
+
+              Module._init(TILE_SIZE, BOARD_SIZE);
+
+              element.width = Module._getWidth();
+              element.height = Module._getHeight();
+              
               array = new Uint8ClampedArray(
-                      Module.HEAPU8.buffer,
-                      Module.ccall('get_buffer_address','number',[],[]),
-                      4 * element.width * element.height,
+                  Module.HEAPU8.buffer,
+                  Module._get_buffer_address(),
+                  element.width *  element.height *4,
               );
               const image = new ImageData(
                   array,
@@ -131,7 +132,6 @@
                   pulse_js();
               };
 
-              Module._init();
               pulse_js();
           }],
         preRun: [],

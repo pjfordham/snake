@@ -3,20 +3,20 @@
 #include "jslib.hh"
 #include "render_window.hh"
 
-const int TILE_SIZE = 20;
+static int TILE_SIZE;
+static Snake *snake;
+static RenderWindow *window;
 
-const unsigned int SCREEN_WIDTH  = ( 2 + BOARD_SIZE) * TILE_SIZE;
-const unsigned int SCREEN_HEIGHT = ( 2 + BOARD_SIZE) * TILE_SIZE;
+static void draw( RenderWindow *window, Snake *snake ) {
+   window->clear( js_blue );
 
-static void draw( RenderWindow &window, Snake &snake ) {
-   window.clear( js_blue );
-
+   int BOARD_SIZE = snake->get_board_size();
    RectangleShape shape(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE);
    shape.setFillColor( js_black );
    shape.setPosition(1*TILE_SIZE, 1*TILE_SIZE);
-   window.draw(shape);
+   window->draw(shape);
 
-   for (auto&& [ x, y, content ] : snake) {
+   for (auto&& [ x, y, content ] : *snake) {
       RectangleShape shape(TILE_SIZE, TILE_SIZE);
       shape.setPosition((x+1)*TILE_SIZE, (y+1)*TILE_SIZE);
       switch ( content ) {
@@ -36,38 +36,40 @@ static void draw( RenderWindow &window, Snake &snake ) {
          shape.setFillColor( js_green );
          break;
       }
-      window.draw(shape);
+      window->draw(shape);
    }
 }
 
 
-RenderWindow window(SCREEN_WIDTH, SCREEN_HEIGHT);
+extern "C" void init(int tile_size, int board_size) {
+   TILE_SIZE = tile_size;
+   snake = new Snake(board_size);
+   window = new RenderWindow(
+      (2 + board_size) * TILE_SIZE,
+      (2 + board_size) * TILE_SIZE);
+   draw( window, snake );
+}
 
 extern "C" unsigned int *get_buffer_address() {
-   return window.get_buffer_address();
+   return window->get_buffer_address();
 }
 
 extern "C" int getWidth() {
-   return window.getWidth();
+   return window->getWidth();
 }
 
 extern "C" int getHeight() {
-   return window.getHeight();
+   return window->getHeight();
 }
 
 
 
 bool running = false;
-Snake snake;
 
-
-extern "C" void init() {
-   draw( window, snake );
-}
 
 extern "C" void pulse() {
    if (running) {
-      snake.pulse();
+      snake->pulse();
       draw( window, snake);
    }
 }
@@ -104,22 +106,22 @@ extern "C" void rightclick(int x, int y) {
 extern "C" void keypress(char key) {
    switch( key ) {
    case 'c':
-      snake.reset();
+      snake->reset();
       break;
    case 'i':
-      snake.pulse();
+      snake->pulse();
       break;
    case 'w':
-      snake.setDirection( Snake::Up );
+      snake->setDirection( Snake::Up );
       break;
    case 's':
-      snake.setDirection( Snake::Down );
+      snake->setDirection( Snake::Down );
       break;
    case 'a':
-      snake.setDirection( Snake::Left );
+      snake->setDirection( Snake::Left );
       break;
    case 'd':
-      snake.setDirection( Snake::Right );
+      snake->setDirection( Snake::Right );
       break;
    default:
       running = !running;
