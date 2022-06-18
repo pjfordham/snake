@@ -1,38 +1,58 @@
-#include "jslib.hh"
 #include "snake.hh"
-#include <string.h>
-#include <stdio.h>
+
+#include "jslib.hh"
+#include "render_window.hh"
 
 const int TILE_SIZE = 20;
 
-const unsigned int SCREEN_WIDTH  = (2+BOARD_SIZE) * TILE_SIZE;
-const unsigned int SCREEN_HEIGHT = (2+BOARD_SIZE) * TILE_SIZE;
+const unsigned int SCREEN_WIDTH  = ( 2 + BOARD_SIZE) * TILE_SIZE;
+const unsigned int SCREEN_HEIGHT = ( 2 + BOARD_SIZE) * TILE_SIZE;
 
-unsigned int BUFFER[SCREEN_WIDTH * SCREEN_HEIGHT];
+static void draw( RenderWindow &window, Snake &snake ) {
+   window.clear( js_blue );
 
-extern "C" unsigned int *get_buffer_address() { return &BUFFER[0]; }
+   RectangleShape shape(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE);
+   shape.setFillColor( js_black );
+   shape.setPosition(1*TILE_SIZE, 1*TILE_SIZE);
+   window.draw(shape);
 
+   for (auto&& [ x, y, content ] : snake) {
+      RectangleShape shape(TILE_SIZE, TILE_SIZE);
+      shape.setPosition((x+1)*TILE_SIZE, (y+1)*TILE_SIZE);
+      switch ( content ) {
+      default:
+         shape.setFillColor( js_black );
+         break;
+      case Snake::Food:
+         shape.setFillColor( js_red );
+         break;
+      case Snake::Body:
+         shape.setFillColor( js_white );
+         break;
+      case Snake::Corpse:
+         shape.setFillColor( js_yellow );
+         break;
+      case Snake::Head:
+         shape.setFillColor( js_green );
+         break;
+      }
+      window.draw(shape);
+   }
+}
+
+
+RenderWindow window(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+extern "C" unsigned int *get_buffer_address() {
+   return window.get_buffer_address();
+}
 
 extern "C" int getWidth() {
-   return SCREEN_WIDTH;
+   return window.getWidth();
 }
 
 extern "C" int getHeight() {
-   return SCREEN_HEIGHT;
-}
-
-extern "C" void plot(int x, int y, unsigned int color) {
-   BUFFER[SCREEN_WIDTH * y + x] = color;
-}
-
-static void plot_rectange(int x, int y, unsigned int color) {
-   for (int i = 0; i < TILE_SIZE; ++i) {
-      for (int j = 0; j < TILE_SIZE; ++j) {
-         plot( x * TILE_SIZE + i,
-               y * TILE_SIZE + j,
-               color );
-      }
-   }
+   return window.getHeight();
 }
 
 
@@ -40,49 +60,15 @@ static void plot_rectange(int x, int y, unsigned int color) {
 bool running = false;
 Snake snake;
 
-static void draw() {
-   for( int x=1;x<BOARD_SIZE+1;x++ ){
-      for ( int y = 1;y<BOARD_SIZE+1;y++) {
-         plot_rectange(x, y, 0xFF000000);
-      }
-   }
-   for (auto&& [ x, y, content ] : snake) {
-
-      switch ( content ) {
-      default:
-         plot_rectange(x+1, y+1,js_black);
-         break;
-      case Snake::Food:
-         plot_rectange(x+1, y+1,js_red);
-         break;
-      case Snake::Body:
-         plot_rectange(x+1, y+1,js_white); ;
-         break;
-      case Snake::Corpse:
-         plot_rectange(x+1, y+1,js_yellow);
-         break;
-      case Snake::Head:
-         plot_rectange(x+1, y+1,js_green);
-         break;
-      }
-   }
-}
-
 
 extern "C" void init() {
-   // Clear window to Blue to do blue boarder.
-   for( int x=0;x<BOARD_SIZE+2;x++ ){
-      for ( int y = 0;y<BOARD_SIZE+2;y++) {
-         plot_rectange(x, y, 0xFFFF0000);
-      }
-   }
-   draw();
+   draw( window, snake );
 }
 
 extern "C" void pulse() {
    if (running) {
       snake.pulse();
-      draw();
+      draw( window, snake);
    }
 }
 
@@ -140,6 +126,6 @@ extern "C" void keypress(char key) {
       break;
    }
 
-   draw();
+   draw( window, snake );
 
 }

@@ -3,11 +3,48 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Sleep.hpp>
 
-const float TILE_SIZE = 10.0;
+const float TILE_SIZE = 20.0;
+
+const unsigned int SCREEN_WIDTH  = (2 + BOARD_SIZE) * (int)TILE_SIZE;
+const unsigned int SCREEN_HEIGHT = (2 + BOARD_SIZE) * (int)TILE_SIZE;
+
+static void draw( sf::RenderWindow &window, Snake &snake ) {
+   window.clear( sf::Color::Blue );
+
+   sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
+   shape.setFillColor(sf::Color::Black);
+   shape.setPosition(1*TILE_SIZE, 1*TILE_SIZE);
+   window.draw(shape);
+
+   for (auto&& [ x, y, content ] : snake) {
+      sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+      shape.setPosition((x+1)*TILE_SIZE, (y+1)*TILE_SIZE);
+      switch (content) {
+      default:
+         shape.setFillColor(sf::Color::Black);
+         break;
+      case Snake::Food:
+         shape.setFillColor(sf::Color::Red);
+         break;
+      case Snake::Body:
+         shape.setFillColor(sf::Color::White);
+         break;
+      case Snake::Corpse:
+         shape.setFillColor(sf::Color::Yellow);
+         break;
+      case Snake::Head:
+         shape.setFillColor(sf::Color::Green);
+         break;
+      }
+      window.draw(shape);
+   }
+   window.display();
+}
 
 int main()
 {
-   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Snake");
+   sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Snake");
+
    Snake snake;
 
    sf::Clock clock;
@@ -64,38 +101,7 @@ int main()
 
       if (!skip_pulse && snake.pulse()) {
          clock.restart();
-
-         window.clear( sf::Color::Blue );
-
-         sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
-         shape.setFillColor(sf::Color::Black);
-         shape.setOrigin(1*-TILE_SIZE, 1*-TILE_SIZE);
-         window.draw(shape);
-
-         for (auto&& [ x, y, content ] : snake) {
-            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-            shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
-            switch (content) {
-            default:
-               shape.setFillColor(sf::Color::Black);
-               break;
-            case Snake::Food:
-               shape.setFillColor(sf::Color::Red);
-               break;
-            case Snake::Body:
-               shape.setFillColor(sf::Color::White);
-               break;
-            case Snake::Corpse:
-               shape.setFillColor(sf::Color::Yellow);
-               break;
-            case Snake::Head:
-               shape.setFillColor(sf::Color::Green);
-               break;
-            }
-            window.draw(shape);
-         }
-         window.display();
-
+         draw( window, snake );
       }
    }
 

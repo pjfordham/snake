@@ -2,19 +2,19 @@
 #define JSLIB_FILE_H
 
 class js_color {
-public:
    unsigned char a,b,g,r;
-   js_color(unsigned char _a, unsigned char _b, unsigned char _g, unsigned char _r) : a(_a), b(_b), g(_g), r(_r) {
+public:
+   constexpr js_color(unsigned char _a, unsigned char _b, unsigned char _g, unsigned char _r) : a(_a), b(_b), g(_g), r(_r) {
    }
 
-   js_color operator* ( js_color color ) const {
+   constexpr js_color operator* ( js_color color ) const {
       return js_color( (a * color.a) >> 8,
                        (b * color.b) >> 8,
                        (g * color.g) >> 8,
                        (r * color.r) >> 8 );
    }
 
-   operator unsigned int() const {
+   constexpr operator unsigned int() const {
       return (a << 24) | (b << 16) | (g << 8) | r;
    }
 
