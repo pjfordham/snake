@@ -86,14 +86,14 @@
               this.ctx = this.element.getContext("2d")
               this.canvas = this.ctx.canvas;
 
-              this.snake_game = Module._init(tile_size, board_size);
+              this.snake_game = new Module.SnakeGame(tile_size, board_size);
 
-              this.element.width = this.Module._getWidth(this.snake_game);
-              this.element.height = this.Module._getHeight(this.snake_game);
+              this.element.width = this.snake_game.getWidth();
+              this.element.height = this.snake_game.getHeight();
 
               this.array = new Uint8ClampedArray(
                   Module.HEAPU8.buffer,
-                  Module._get_buffer_address(this.snake_game),
+                  this.snake_game.getBufferAddress(),
                   this.element.width *  this.element.height *4,
               );
               this.image = new ImageData(
@@ -105,9 +105,9 @@
           var timeout;
           pulse() {
               clearTimeout(this.timeout);
-              this.Module._pulse( this.snake_game );
+              this.snake_game.pulse();
               this.ctx.putImageData(this.image, 0, 0);
-              this.timeout = setTimeout( this.pulse.bind(this), 100 );
+              this.timeout = setTimeout( this.pulse.bind(this) , 100 );
           }
 
           click( event ) {
@@ -133,7 +133,7 @@
               } else if (key == "ArrowRight" ){
                   key = "d";
               }
-              this.Module._keypress(this.snake_game,key.charCodeAt(0));
+              this.snake_game.keypress(key.charCodeAt(0));
               this.pulse();
           }
       };

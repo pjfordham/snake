@@ -1,3 +1,5 @@
+#include <emscripten/bind.h>
+
 #include "snake.hh"
 
 #include "jslib.hh"
@@ -86,8 +88,8 @@ struct SnakeGame {
       draw();
    }
 
-   unsigned int *get_buffer_address() {
-      return window->get_buffer_address();
+   uintptr_t get_buffer_address() {
+      return (uintptr_t)window->get_buffer_address();
    }
 
    int getWidth() {
@@ -100,54 +102,15 @@ struct SnakeGame {
 
 };
 
-extern "C" SnakeGame* init(int tile_size, int board_size) {
-   return new SnakeGame( tile_size, board_size);
-}
-
-extern "C" unsigned int *get_buffer_address(SnakeGame *gs) {
-   return gs->get_buffer_address();
-}
-
-extern "C" int getWidth(SnakeGame *gs) {
-   return gs->getWidth();
-}
-
-extern "C" int getHeight(SnakeGame *gs ) {
-   return gs->getHeight();
-}
-
-extern "C" void pulse(SnakeGame *gs ) {
-   gs->pulse();
-}
-
-extern "C" void keypress(SnakeGame *gs, char key) {
-   gs->keypress( key );
-}
-
-extern "C" void click(SnakeGame *gs, int x, int y) {
-
-   // auto i = (y / TILE_SIZE) - 1;
-   // auto j = (x / TILE_SIZE) - 1;
-
-   // if ( 0 <= i && i < BOARD_SIZE &&
-   //      0 <= j && j < BOARD_SIZE )
-   // {
-   //    // gol.click( i ,j );
-   //    draw();
-   // }
-
-}
-
-extern "C" void rightclick(SnakeGame *gs, int x, int y) {
-
-   // auto i = (y / TILE_SIZE) - 1;
-   // auto j = (x / TILE_SIZE) - 1;
-
-   // if ( 0 <= i && i < BOARD_SIZE &&
-   //      0 <= j && j < BOARD_SIZE )
-   // {
-   //    gol.addShape(shapes[ shapeIndex ], i,j);
-   //    draw();
-   // }
-
+// Binding code
+EMSCRIPTEN_BINDINGS(my_class_example) {
+   emscripten::class_<SnakeGame>("SnakeGame")
+    .constructor<int, int>()
+    .function("pulse", &SnakeGame::pulse)
+    .function("draw", &SnakeGame::draw)
+    .function("keypress", &SnakeGame::keypress)
+    .function("getWidth", &SnakeGame::getWidth)
+    .function("getHeight", &SnakeGame::getHeight)
+    .function("getBufferAddress", &SnakeGame::get_buffer_address)
+    ;
 }
