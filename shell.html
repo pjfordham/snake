@@ -54,7 +54,9 @@
       <progress value="0" max="100" id="progress" hidden=1></progress>
     </div>
     <div class="emscripten_border">
-      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+      <canvas class="emscripten" id="canvas1" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+      <p>
+      <canvas class="emscripten" id="canvas2" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     </div>
     <hr/>
     <div class="emscripten">
@@ -84,14 +86,14 @@
               this.ctx = this.element.getContext("2d")
               this.canvas = this.ctx.canvas;
 
-              this.snake = Module._init(tile_size, board_size);
+              this.snake_game = Module._init(tile_size, board_size);
 
-              this.element.width = this.Module._getWidth();
-              this.element.height = this.Module._getHeight();
+              this.element.width = this.Module._getWidth(this.snake_game);
+              this.element.height = this.Module._getHeight(this.snake_game);
 
               this.array = new Uint8ClampedArray(
                   Module.HEAPU8.buffer,
-                  Module._get_buffer_address(),
+                  Module._get_buffer_address(this.snake_game),
                   this.element.width *  this.element.height *4,
               );
               this.image = new ImageData(
@@ -103,7 +105,7 @@
           var timeout;
           pulse() {
               clearTimeout(this.timeout);
-              this.Module._pulse( this.snake );
+              this.Module._pulse( this.snake_game );
               this.ctx.putImageData(this.image, 0, 0);
               this.timeout = setTimeout( this.pulse.bind(this), 100 );
           }
@@ -131,7 +133,7 @@
               } else if (key == "ArrowRight" ){
                   key = "d";
               }
-              this.Module.ccall('keypress','',['number'],[key.charCodeAt(0)]);
+              this.Module._keypress(this.snake_game,key.charCodeAt(0));
               this.pulse();
           }
       };
@@ -139,7 +141,8 @@
       var Module = {
           postRun: [function() {
 
-              game = new SnakeCanvas( "canvas", 20, 40, Module);
+              game = new SnakeCanvas( "canvas1", 10, 40, Module);
+              game2 = new SnakeCanvas( "canvas2", 10, 40, Module);
 
               game.element.onmousedown = (event) => {
                   game.click( event );
@@ -147,9 +150,11 @@
 
               window.onkeydown = (event) => {
                   game.key( event );
+                  game2.key( event );
               };
 
               game.pulse();
+              game2.pulse();
           }],
         preRun: [],
         print: (function() {
@@ -170,7 +175,7 @@
           };
         })(),
         canvas: (function() {
-          var canvas = document.getElementById('canvas');
+          var canvas = document.getElementById('canvas1');
 
           // As a default initial behavior, pop up an alert when webgl context is lost. To make your
           // application robust, you may want to override this behavior before shipping!
